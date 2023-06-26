@@ -1,6 +1,6 @@
 # readme
 
-proxyが複数のserverに対してrequestをforwardresponseを集約してclientに返す
+proxyが複数のserverに対してrequestをforward。responseを集約してclientに返す
 
 `go run ./proxy/main.go `
 
