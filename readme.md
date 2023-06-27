@@ -9,6 +9,8 @@ proxyが複数のserverに対してrequestをforward。responseを集約してcl
 `go run ./server/main.go 8282`
 
 
+proxyは8080で起動する。8080にrequest
+
 ```
 $ curl localhost:8080
 {"person_list":[{"name":"hoge","age":1},{"name":"hoge","age":1}]}
