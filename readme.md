@@ -13,3 +13,7 @@ proxyが複数のserverに対してrequestをforward。responseを集約してcl
 $ curl localhost:8080
 {"person_list":[{"name":"hoge","age":1},{"name":"hoge","age":1}]}
 ```
+
+
+- pathをquery stringをそのまま各サーバーにfoward
+- ndjson形式は対応してないのでTODO
