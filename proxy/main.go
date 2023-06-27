@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"sync"
 	
-	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 )
 
@@ -27,6 +26,7 @@ func doGet(url string, wg *sync.WaitGroup) (*Person, error) {
 	req := fasthttp.AcquireRequest() //空のrequestを作る
 	req.SetRequestURI(url)
 	req.Header.SetMethod(fasthttp.MethodGet)
+	
 	resp := fasthttp.AcquireResponse() //空のresponseを作る
 	err := client.Do(req, resp) // request	
 	fasthttp.ReleaseRequest(req)
@@ -40,43 +40,54 @@ func doGet(url string, wg *sync.WaitGroup) (*Person, error) {
 }
 
 
-
 func Handler(ctx *fasthttp.RequestCtx) {
 	serverList := [2]string{
-		"http://localhost:8181/",
-		"http://localhost:8282/",
+		"localhost:8181",
+		"localhost:8282",
 	}
+	
 	var wg sync.WaitGroup
 	mutex := sync.Mutex{}
 
+	path := ctx.URI().Path()
+	query := ctx.URI().QueryString()
+	
+	fmt.Println("path: ", string(path))
+	fmt.Println("query: ", string(query))
+
 	personList := PersonList{}
-	for _, url := range serverList {
+	for _, host := range serverList {
+		fmt.Println("host", host)
 		wg.Add(1)
-		go func() {
-			r, err := doGet(url, &wg)
+		go func(h string) {
+			uri := fasthttp.AcquireURI()
+			uri.SetPathBytes(path)
+			uri.SetQueryStringBytes(query)
+			uri.SetHost(h)
+			
+			fmt.Println("url", uri.String())
+			r, err := doGet(uri.String(), &wg)
 			if err != nil {
 				fmt.Printf("debug print %s\n", err)
-			}			
+				return
+			}
 			mutex.Lock()
 			personList.Person = append(personList.Person, r)
 			mutex.Unlock()			
-		}()
+		}(host)
 	}
 	wg.Wait()
 
 
 	ctx.Response.Header.Set("Content-Type", "application/json")
-	// fmt.Println(personList)
-	s, _ := json.Marshal(personList)	
-	// fmt.Println(string(s))
+	s, _ := json.Marshal(personList)
 
 	ctx.SetBody(s)
 	fmt.Println("return!")
 	return
 }
 
+
 func main() {
-    r := router.New()
-    r.GET("/", Handler)
-    log.Fatal(fasthttp.ListenAndServe("127.0.0.1:8080", r.Handler))
+	log.Fatal(fasthttp.ListenAndServe("127.0.0.1:8080", Handler))
 }
